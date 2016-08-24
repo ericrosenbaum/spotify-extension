@@ -48,15 +48,30 @@
                 data: {
                     q: query,
                     type: 'track',
-                    limit: '1'
+                    limit: '10'
                 },
                 success: function (response) {
-                    var trackObject = response['tracks']['items'][0];
+                    var trackObjects = response['tracks']['items'];
 
+                    // fail if there are no tracks
+                    if (!trackObjects) {
+                        resetTrackData();
+                        callback();
+                        return;
+                    }
+
+                    // find the first result without explicit lyrics
+                    var trackObject;
+                    for (var i=0; i<trackObjects.length; i++) {
+                        if (!trackObjects[i].explicit) {
+                            trackObject = trackObjects[i];
+                            continue;
+                        }
+                    }
+
+                    // fail if there were none without explicit lyrics
                     if (!trackObject) {
-                        currentArtistName = 'none';
-                        currentTrackName = 'none';
-                        currentAlbumName = 'none';
+                        resetTrackData();
                         callback();
                         return;
                     }
@@ -64,13 +79,6 @@
                     currentArtistName = trackObject.artists[0].name;
                     currentTrackName = trackObject.name;
                     currentAlbumName = trackObject.album.name;
-
-                    if (trackObject.explicit) {
-                        console.log('sorry, ' + currentTrackName + ' by ' + currentArtistName + ' has explicit lyrics.');
-                        currentTrackName += " (explicit lyrics, not played)"
-                        callback();
-                        return;
-                    }
                     
                     var trackURL = trackObject.preview_url;
                     player = new Tone.Player(trackURL, startPlayer).toMaster(); 
@@ -91,7 +99,14 @@
                                 callback();
                             }, currentTrackDuration*1000);
                         }
-                    }                   
+                    }     
+
+                    function resetTrackData() {
+                        currentArtistName = 'none';
+                        currentTrackName = 'none';
+                        currentAlbumName = 'none';
+                        trackTempo = 0;
+                    }              
                 },
                 error: function() {
                 }

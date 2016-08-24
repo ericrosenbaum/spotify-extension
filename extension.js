@@ -13,6 +13,7 @@
         var currentTrackDuration = 0;
         var currentArtistName = 'none';
         var currentTrackName = 'none';
+        var currentAlbumName = 'none';
 
         // Cleanup function when the extension is unloaded
         ext._shutdown = function() {};
@@ -46,16 +47,21 @@
                 },
                 success: function (response) {
                     var trackObject = response['tracks']['items'][0];
+
                     if (!trackObject) {
                         currentArtistName = 'none';
                         currentTrackName = 'none';
+                        currentAlbumName = 'none';
                         callback();
                         return;
                     }
+                    
                     var trackURL = trackObject.preview_url;
                     player = new Tone.Player(trackURL, startPlayer).toMaster(); 
+                    
                     currentArtistName = trackObject.artists[0].name;
                     currentTrackName = trackObject.name;
+                    currentAlbumName = trackObject.album.name;
 
                     if (!waitForTrackToEnd) {
                         callback();
@@ -85,6 +91,10 @@
             return currentArtistName;
         };
 
+        ext.albumName = function() {
+            return currentAlbumName;
+        };
+
         ext.stopMusic = function() {
             player.stop();
         };
@@ -96,6 +106,7 @@
               ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
               ['r', 'track name', 'trackName'],
               ['r', 'artist name', 'artistName'],
+              ['r', 'album name', 'albumName'],
               [' ', 'stop the music', 'stopMusic']
             ]
         };

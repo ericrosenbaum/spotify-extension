@@ -55,16 +55,24 @@
                         callback();
                         return;
                     }
-                    
-                    var trackURL = trackObject.preview_url;
-                    player = new Tone.Player(trackURL, startPlayer).toMaster(); 
-                    
+
                     currentArtistName = trackObject.artists[0].name;
                     currentTrackName = trackObject.name;
                     currentAlbumName = trackObject.album.name;
 
+                    if (trackObject.explicit) {
+                        console.log('sorry, ' + currentTrackName + ' by ' + currentArtistName + ' has explicit lyrics.');
+                        currentTrackName += " (explicit lyrics, not played)"
+                        callback();
+                        return;
+                    }
+                    
+                    var trackURL = trackObject.preview_url;
+                    player = new Tone.Player(trackURL, startPlayer).toMaster(); 
+                    
                     if (!waitForTrackToEnd) {
                         callback();
+                        return;
                     }
 
                     function startPlayer() {

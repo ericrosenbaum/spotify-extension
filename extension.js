@@ -229,7 +229,10 @@
         ext.playBeat = function(num) {
             if (player) {
                 player.stop();
-                currentBeatNum = num % trackTimingData.beats.length;;
+                currentBeatNum = num % trackTimingData.beats.length;
+                if (currentBeatNum < 0) {
+                    currentBeatNum += trackTimingData.beats.length;
+                }
                 playBeatNumber(currentBeatNum);
             }
         }

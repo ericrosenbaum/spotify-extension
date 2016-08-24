@@ -11,6 +11,8 @@
 
         var player;
         var currentTrackDuration = 0;
+        var currentArtistName = 'none';
+        var currentTrackName = 'none';
 
         // Cleanup function when the extension is unloaded
         ext._shutdown = function() {};
@@ -21,7 +23,15 @@
             return {status: 2, msg: 'Ready'};
         };
 
-        ext.searchAndPlay = function(query) {
+        ext.searchAndPlayAndWait = function(query, callback) {
+            requestSearchAndPlay(query, true, callback);
+        };
+
+        ext.searchAndPlay = function(query, callback) {
+            requestSearchAndPlay(query, false, callback);
+        };
+
+        function requestSearchAndPlay(query, waitForTrackToEnd, callback) {
 
             if (player) {
                 player.stop();
@@ -35,12 +45,30 @@
                     limit: '1'
                 },
                 success: function (response) {
-                    trackURL = response['tracks']['items'][0].preview_url;
+                    var trackObject = response['tracks']['items'][0];
+                    if (!trackObject) {
+                        currentArtistName = 'none';
+                        currentTrackName = 'none';
+                        callback();
+                        return;
+                    }
+                    var trackURL = trackObject.preview_url;
                     player = new Tone.Player(trackURL, startPlayer).toMaster(); 
-                    
+                    currentArtistName = trackObject.artists[0].name;
+                    currentTrackName = trackObject.name;
+
+                    if (!waitForTrackToEnd) {
+                        callback();
+                    }
+
                     function startPlayer() {
                         player.start();
                         currentTrackDuration = player.buffer.duration;
+                        if (waitForTrackToEnd) {
+                            window.setTimeout(function() {
+                                callback();
+                            }, currentTrackDuration*1000);
+                        }
                     }                   
                 },
                 error: function() {
@@ -49,20 +77,31 @@
         
         };
 
+        ext.trackName = function() {
+            return currentTrackName;
+        };
+
+        ext.artistName = function() {
+            return currentArtistName;
+        };
+
         ext.stopMusic = function() {
             player.stop();
-        }
+        };
 
         // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              [' ', 'play music like %s', 'searchAndPlay', 'the beatles'],
+              ['w', 'play music like %s', 'searchAndPlay', 'the beatles'],
+              ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
+              ['r', 'track name', 'trackName'],
+              ['r', 'artist name', 'artistName'],
               [' ', 'stop the music', 'stopMusic']
             ]
         };
 
         // Register the extension
-        ScratchExtensions.register('Sample extension', descriptor, ext);
+        ScratchExtensions.register('Spotify', descriptor, ext);
     }
 
 })({});

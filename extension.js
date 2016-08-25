@@ -9,7 +9,8 @@
 
     function startTone() {
 
-        var player;
+        var player = new Tone.Player().toMaster(); 
+        var audioContext = new AudioContext();
 
         var trackTimingData;
         var currentBeatNum = 0;
@@ -47,8 +48,7 @@
                 url: 'https://api.spotify.com/v1/search',
                 data: {
                     q: query,
-                    type: 'track',
-                    limit: '10'
+                    type: 'track'
                 },
                 success: function (response) {
                     var trackObjects = response['tracks']['items'];
@@ -65,7 +65,7 @@
                     for (var i=0; i<trackObjects.length; i++) {
                         if (!trackObjects[i].explicit) {
                             trackObject = trackObjects[i];
-                            continue;
+                            break;
                         }
                     }
 
@@ -76,30 +76,17 @@
                         return;
                     }
 
+                    // store track name, artist, album
                     currentArtistName = trackObject.artists[0].name;
                     currentTrackName = trackObject.name;
                     currentAlbumName = trackObject.album.name;
-                    
-                    var trackURL = trackObject.preview_url;
-                    player = new Tone.Player(trackURL, startPlayer).toMaster(); 
+
                     currentBeatNum = 0;
 
-                    if (!waitForTrackToEnd) {
-                        getTrackTimingData(trackURL, callback);
-                        return;
-                    } else {
-                        getTrackTimingData(trackURL, null);
-                    }
+                    // download track, get timing data, and play it
 
-                    function startPlayer() {
-                        player.start();
-                        currentTrackDuration = player.buffer.duration;
-                        if (waitForTrackToEnd) {
-                            window.setTimeout(function() {
-                                callback();
-                            }, currentTrackDuration*1000);
-                        }
-                    }     
+                    var trackURL = trackObject.preview_url;            
+                    getTrackTimingData(trackURL, callback);
 
                     function resetTrackData() {
                         currentArtistName = 'none';
@@ -114,6 +101,7 @@
         
         };
 
+        // code adapted from spotify
         function getTrackTimingData(url, callback) {
 
             function findString(buffer, string) {
@@ -158,28 +146,34 @@
             }
 
             function makeRequest(url, callback) {
-              var request = new XMLHttpRequest();
-              request.open('GET', url, true);
-              request.responseType = 'arraybuffer';
-              request.onload = function() {
-                var buffer = new Uint8Array(this.response); // this.response == uInt8Array.buffer
-                var idx = findString(buffer, 'GEOB');
+                var request = new XMLHttpRequest();
+                request.open('GET', url, true);
+                request.responseType = 'arraybuffer';
+                request.onload = function() {
+                    var buffer = new Uint8Array(this.response); // this.response == uInt8Array.buffer
+                    var idx = findString(buffer, 'GEOB');
 
-                trackTimingData = getSection(buffer, idx + 1, 8);
+                    trackTimingData = getSection(buffer, idx + 1, 8);
 
-                console.log(trackTimingData);
-                var sum =0;
-                for (var i=0; i<trackTimingData.beats.length-1; i++) {
-                    sum += trackTimingData.beats[i+1] - trackTimingData.beats[i];
+                    // estimate the tempo using the average time interval between beats
+                    var sum =0;
+                    for (var i=0; i<trackTimingData.beats.length-1; i++) {
+                        sum += trackTimingData.beats[i+1] - trackTimingData.beats[i];
+                    }
+                    var beatLength = sum / (trackTimingData.beats.length - 1);
+                    trackTempo = 60 / beatLength;
+
+                    // decode and play the audio
+                    audioContext.decodeAudioData(request.response, function(buffer) {
+                        player.buffer.set(buffer);
+                        player.start();
+                        currentTrackDuration = player.buffer.duration;
+                        if (callback) {
+                            callback();
+                        }
+                    });
                 }
-                var beatLength = sum / (trackTimingData.beats.length - 1);
-                trackTempo = 60 / beatLength;
-
-                if (callback) {
-                    callback();
-                }
-              }
-              request.send();
+                request.send();
             }
 
             makeRequest(url, callback);
@@ -203,14 +197,13 @@
 
         ext.playNextBeat = function() {
             if (player) {
-                player.stop();
                 currentBeatNum++;
                 currentBeatNum %= trackTimingData.beats.length;
-                playBeatNumber(currentBeatNum);
+                playCurrentBeat();
             }
         };
 
-        function playBeatNumber(num) {
+        function playCurrentBeat() {
             var startTime = trackTimingData.beats[currentBeatNum];
             var duration;
             if ((currentBeatNum + 1) < trackTimingData.beats.length) {
@@ -219,6 +212,7 @@
             } else {
                 duration = currentTrackDuration - startTime;
             }
+            player.stop();
             player.start('+0', startTime, duration);
         }
 
@@ -228,12 +222,11 @@
 
         ext.playBeat = function(num) {
             if (player) {
-                player.stop();
                 currentBeatNum = num % trackTimingData.beats.length;
                 if (currentBeatNum < 0) {
                     currentBeatNum += trackTimingData.beats.length;
                 }
-                playBeatNumber(currentBeatNum);
+                playCurrentBeat();
             }
         }
 
@@ -252,7 +245,7 @@
               ['r', 'track tempo', 'trackTempo'],
               [' ', 'play next beat', 'playNextBeat'],
               ['r', 'current beat', 'currentBeat'],
-              [' ', 'play beat %n', 'playBeat'],
+              [' ', 'play beat %n', 'playBeat', 4],
               [' ', 'stop the music', 'stopMusic']
             ]
         };

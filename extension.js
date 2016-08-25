@@ -10,7 +10,7 @@
     function startTone() {
 
         var player = new Tone.Player().toMaster(); 
-        var audioContext = new AudioContext();
+        var audioContext = Tone.context;
 
         var trackTimingData;
         var currentBeatNum = 0;
@@ -86,7 +86,17 @@
                     // download track, get timing data, and play it
 
                     var trackURL = trackObject.preview_url;            
-                    getTrackTimingData(trackURL, callback);
+                    getTrackTimingData(trackURL, trackFinishedLoading);
+
+                    function trackFinishedLoading() {
+                        if (!waitForTrackToEnd) {
+                            callback();
+                        } else {
+                            window.setTimeout(function() {
+                                callback();
+                            }, currentTrackDuration*1000);
+                        }
+                    }
 
                     function resetTrackData() {
                         currentArtistName = 'none';
@@ -168,9 +178,7 @@
                         player.buffer.set(buffer);
                         player.start();
                         currentTrackDuration = player.buffer.duration;
-                        if (callback) {
-                            callback();
-                        }
+                        callback();
                     });
                 }
                 request.send();
@@ -237,7 +245,7 @@
         // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              ['w', 'play music like %s', 'searchAndPlay', 'the beatles'],
+              ['w', 'play music like %s', 'searchAndPlay', 'happy'],
               ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
               ['r', 'track name', 'trackName'],
               ['r', 'artist name', 'artistName'],

@@ -9,11 +9,16 @@
 
     function startTone() {
 
-        var player = new Tone.Player().toMaster(); 
+        var player = new Tone.Player().toMaster();
         var audioContext = Tone.context;
 
         var trackTimingData;
         var currentBeatNum = 0;
+        var beatFlag = false;
+        var barFlag = false;
+        var beatTimeouts = [];
+        var barTimeouts = [];
+        var trackTimeout;
 
         var currentTrackDuration = 0;
         var trackTempo = 0;
@@ -92,9 +97,10 @@
                         if (!waitForTrackToEnd) {
                             callback();
                         } else {
-                            window.setTimeout(function() {
+                            trackTimeout = window.setTimeout(function() {
                                 callback();
                             }, currentTrackDuration*1000);
+
                         }
                     }
 
@@ -173,6 +179,23 @@
                     var beatLength = sum / (trackTimingData.beats.length - 1);
                     trackTempo = 60 / beatLength;
 
+                    // set up events to fire on each beat
+                    for (var i=0; i<trackTimingData.beats.length; i++) {
+                        var t = window.setTimeout(function() {
+                            beatFlag = true;
+                            currentBeatNum = i;
+                        }.bind(i), trackTimingData.beats[i] * 1000);
+                        beatTimeouts.push(t);
+                    }
+
+                    // set up events to fire on each bar
+                    for (var i=0; i<trackTimingData.downbeats.length; i++) {
+                        var t = window.setTimeout(function() {
+                            barFlag = true;
+                        }, trackTimingData.downbeats[i] * 1000);
+                        barTimeouts.push(t);
+                    }
+
                     // decode and play the audio
                     audioContext.decodeAudioData(request.response, function(buffer) {
                         player.buffer.set(buffer);
@@ -240,6 +263,37 @@
 
         ext.stopMusic = function() {
             player.stop();
+            clearTimeouts();
+        };
+
+        function clearTimeouts() {
+            clearTimeout(trackTimeout);
+            for (var i=0; i<beatTimeouts.length; i++) {
+                clearTimeout(beatTimeouts[i]);
+            }
+            for (var i=0; i<barTimeouts.length; i++) {
+                clearTimeout(barTimeouts[i]);
+            }
+        }
+
+        ext.everyBeat = function() {
+            if (beatFlag) {
+                window.setTimeout(function() {
+                    beatFlag = false;
+                }, 100);
+                return true;
+            }
+            return false;
+        };
+
+        ext.everyBar = function() {
+            if (barFlag) {
+                window.setTimeout(function() {
+                    barFlag = false;
+                }, 100);
+                return true;
+            }
+            return false;
         };
 
         // Block and block menu descriptions
@@ -254,7 +308,10 @@
               [' ', 'play next beat', 'playNextBeat'],
               ['r', 'current beat', 'currentBeat'],
               [' ', 'play beat %n', 'playBeat', 4],
-              [' ', 'stop the music', 'stopMusic']
+              [' ', 'stop the music', 'stopMusic'],
+              ['h', 'every beat', 'everyBeat'],
+              ['h', 'every bar', 'everyBar'],
+
             ]
         };
 

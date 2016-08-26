@@ -181,10 +181,10 @@
 
                     // set up events to fire on each beat
                     for (var i=0; i<trackTimingData.beats.length; i++) {
-                        var t = window.setTimeout(function() {
+                        var t = window.setTimeout(function(i) {
                             beatFlag = true;
                             currentBeatNum = i;
-                        }.bind(i), trackTimingData.beats[i] * 1000);
+                        }, trackTimingData.beats[i] * 1000, i);
                         beatTimeouts.push(t);
                     }
 

@@ -2,9 +2,6 @@
 
 to do:
 
-play beat %n and wait
-play next beat and wait
-
 current bar reporter
 
 play music like %n and loop
@@ -248,14 +245,29 @@ daft punk remix example
         };
 
         ext.playNextBeat = function() {
-            if (player) {
-                currentBeatNum++;
-                currentBeatNum %= trackTimingData.beats.length;
-                playCurrentBeat();
-            }
+            setCurrentBeatNum(currentBeatNum + 1);
+            playCurrentBeat();    
         };
 
-        function playCurrentBeat() {
+        ext.playBeat = function(num) {
+            setCurrentBeatNum(num);
+            playCurrentBeat();
+        };
+
+        ext.playBeatAndWait = function(num, callback) {
+            setCurrentBeatNum(num);
+            playCurrentBeat(callback);
+        };
+
+        function setCurrentBeatNum(num) {
+            num = Math.round(num);
+            currentBeatNum = num % trackTimingData.beats.length;
+            if (currentBeatNum < 0) {
+                currentBeatNum += trackTimingData.beats.length;
+            }
+        }
+
+        function playCurrentBeat(callback) {
             var startTime = trackTimingData.beats[currentBeatNum];
             var duration;
             if ((currentBeatNum + 1) < trackTimingData.beats.length) {
@@ -264,24 +276,21 @@ daft punk remix example
             } else {
                 duration = currentTrackDuration - startTime;
             }
-            player.stop();
-            player.start('+0', startTime, duration);
-            beatFlag = true;   
+            if (player) {
+                player.stop();
+                player.start('+0', startTime, duration);
+            }
+            beatFlag = true;  
+            if (callback) {
+                window.setTimeout(function() {
+                    callback();
+                }, duration * 1000);
+            } 
         }
 
         ext.currentBeat = function() {
             return currentBeatNum;
         };
-
-        ext.playBeat = function(num) {
-            if (player) {
-                currentBeatNum = num % trackTimingData.beats.length;
-                if (currentBeatNum < 0) {
-                    currentBeatNum += trackTimingData.beats.length;
-                }
-                playCurrentBeat();
-            }
-        }
 
         ext.stopMusic = function() {
             player.stop();
@@ -330,6 +339,7 @@ daft punk remix example
               [' ', 'play next beat', 'playNextBeat'],
               ['r', 'current beat', 'currentBeat'],
               [' ', 'play beat %n', 'playBeat', 4],
+              ['w', 'play beat %n and wait', 'playBeatAndWait', 4],
               [' ', 'stop the music', 'stopMusic'],
               ['h', 'every beat', 'everyBeat'],
               ['h', 'every bar', 'everyBar'],

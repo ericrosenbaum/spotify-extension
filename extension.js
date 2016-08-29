@@ -1,3 +1,22 @@
+/*
+
+to do:
+
+play beat %n and wait
+play next beat and wait
+
+current bar reporter
+
+play music like %n and loop
+
+beats should be 1-indexed?
+
+daft punk remix example
+
+
+
+*/
+
 (function(ext) {
 
     if (typeof Tone !== 'undefined') {
@@ -171,6 +190,8 @@
 
                     trackTimingData = getSection(buffer, idx + 1, 8);
 
+                    // console.log(trackTimingData);
+
                     // estimate the tempo using the average time interval between beats
                     var sum =0;
                     for (var i=0; i<trackTimingData.beats.length-1; i++) {
@@ -245,6 +266,7 @@
             }
             player.stop();
             player.start('+0', startTime, duration);
+            beatFlag = true;   
         }
 
         ext.currentBeat = function() {

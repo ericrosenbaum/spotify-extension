@@ -2,11 +2,11 @@
 
 to do:
 
-current bar reporter
-
 play music like %n and loop
 
 beats should be 1-indexed?
+
+use loop point cycle beats rather than full sample length?
 
 daft punk remix example
 
@@ -187,7 +187,7 @@ daft punk remix example
 
                     trackTimingData = getSection(buffer, idx + 1, 8);
 
-                    // console.log(trackTimingData);
+                    console.log(trackTimingData);
 
                     // estimate the tempo using the average time interval between beats
                     var sum =0;
@@ -197,7 +197,19 @@ daft punk remix example
                     var beatLength = sum / (trackTimingData.beats.length - 1);
                     trackTempo = 60 / beatLength;
 
-                    // set up events to fire on each beat
+                    // decode and play the audio
+                    audioContext.decodeAudioData(request.response, function(buffer) {
+                        currentTrackDuration = player.buffer.duration;
+                        setupTimeouts();
+                        player.buffer.set(buffer);
+                        player.start();
+                        callback();
+                    });
+                }
+                request.send();
+
+                function setupTimeouts() {
+                    // events on each beat
                     for (var i=0; i<trackTimingData.beats.length; i++) {
                         var t = window.setTimeout(function(i) {
                             beatFlag = true;
@@ -206,23 +218,14 @@ daft punk remix example
                         beatTimeouts.push(t);
                     }
 
-                    // set up events to fire on each bar
+                    // events on each bar
                     for (var i=0; i<trackTimingData.downbeats.length; i++) {
                         var t = window.setTimeout(function() {
                             barFlag = true;
                         }, trackTimingData.downbeats[i] * 1000);
                         barTimeouts.push(t);
                     }
-
-                    // decode and play the audio
-                    audioContext.decodeAudioData(request.response, function(buffer) {
-                        player.buffer.set(buffer);
-                        player.start();
-                        currentTrackDuration = player.buffer.duration;
-                        callback();
-                    });
                 }
-                request.send();
             }
 
             makeRequest(url, callback);

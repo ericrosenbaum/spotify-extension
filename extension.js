@@ -349,7 +349,6 @@ remix example
                 window.setTimeout(function() {
                     beatFlag = false;
                 }, 10);
-                beatFlag = false;
                 return true;
             }
             return false;

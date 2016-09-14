@@ -2,15 +2,15 @@
 
 to do:
 
-play music like %n and loop
+volume control
+low pass filter
 
 beats should be 1-indexed?
+reporter for number of beats?
+play music like %n and loop?
 
-use loop point cycle beats rather than full sample length?
-
-daft punk remix example
-
-
+song stepper example
+remix example
 
 */
 
@@ -18,14 +18,25 @@ daft punk remix example
 
     if (typeof Tone !== 'undefined') {
         console.log('Tone library is already loaded');
-        startTone();
+        startExtension();
     } else {
-        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r7/Tone.min.js', startTone);
+        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r7/Tone.min.js', startExtension);
     }
 
-    function startTone() {
+    function startExtension() {
 
         var player = new Tone.Player().toMaster();
+
+        var beatPlayer = new Tone.Player();
+        var releaseDur = 0.1;
+        var ampEnv = new Tone.AmplitudeEnvelope({
+            "attack": 0.05,
+            "decay": 0,
+            "sustain": 10,
+            "release": releaseDur
+        }).toMaster();
+        beatPlayer.connect(ampEnv);
+
         var audioContext = Tone.context;
 
         var trackTimingData;
@@ -36,11 +47,14 @@ daft punk remix example
         var barTimeouts = [];
         var trackTimeout;
 
+        var trackStartTime;
+
         var currentTrackDuration = 0;
         var trackTempo = 0;
         var currentArtistName = 'none';
         var currentTrackName = 'none';
         var currentAlbumName = 'none';
+        var numBeats = 0;
 
         // Cleanup function when the extension is unloaded
         ext._shutdown = function() {};
@@ -106,9 +120,11 @@ daft punk remix example
 
                     // download track, get timing data, and play it
 
-                    var trackURL = trackObject.preview_url;            
-                    getTrackTimingData(trackURL, trackFinishedLoading);
+                    var trackURL = trackObject.preview_url;  
+                    console.log('trackURL: ' + trackURL);
 
+                    getTrackTimingData(trackURL, trackFinishedLoading);
+            
                     function trackFinishedLoading() {
                         if (!waitForTrackToEnd) {
                             callback();
@@ -116,22 +132,41 @@ daft punk remix example
                             trackTimeout = window.setTimeout(function() {
                                 callback();
                             }, currentTrackDuration*1000);
-
                         }
                     }
 
-                    function resetTrackData() {
-                        currentArtistName = 'none';
-                        currentTrackName = 'none';
-                        currentAlbumName = 'none';
-                        trackTempo = 0;
-                    }              
                 },
                 error: function() {
                 }
             });
         
         };
+
+        function setupTimeouts() {
+            // events on each beat
+            for (var i=0; i<trackTimingData.beats.length; i++) {
+                var t = window.setTimeout(function(i) {
+                    beatFlag = true;
+                    currentBeatNum = i;
+                }, trackTimingData.beats[i] * 1000, i);
+                beatTimeouts.push(t);
+            }
+
+            // events on each bar
+            for (var i=0; i<trackTimingData.downbeats.length; i++) {
+                var t = window.setTimeout(function() {
+                    barFlag = true;
+                }, trackTimingData.downbeats[i] * 1000);
+                barTimeouts.push(t);
+            }
+        }
+
+        function resetTrackData() {
+            currentArtistName = 'none';
+            currentTrackName = 'none';
+            currentAlbumName = 'none';
+            trackTempo = 0;
+        }              
 
         // code adapted from spotify
         function getTrackTimingData(url, callback) {
@@ -197,35 +232,29 @@ daft punk remix example
                     var beatLength = sum / (trackTimingData.beats.length - 1);
                     trackTempo = 60 / beatLength;
 
+                    // use the loop duration to set the number of beats
+
+                    for (var i=0; i<trackTimingData.beats.length; i++) {
+                        if (trackTimingData.loop_duration < trackTimingData.beats[i]) {
+                            numBeats = i;
+                            break;
+                        }
+                    }
+
                     // decode and play the audio
                     audioContext.decodeAudioData(request.response, function(buffer) {
                         currentTrackDuration = player.buffer.duration;
                         setupTimeouts();
                         player.buffer.set(buffer);
-                        player.start();
-                        callback();
-                    });
+                        player.start(); 
+                        trackStartTime = Tone.now();
+                        beatPlayer.buffer.set(buffer);
+                        // Tone.Transport.start();
+                        // player.start('+0', trackTimingData.beats[0]);
+                        callback();   
+                    }); 
                 }
                 request.send();
-
-                function setupTimeouts() {
-                    // events on each beat
-                    for (var i=0; i<trackTimingData.beats.length; i++) {
-                        var t = window.setTimeout(function(i) {
-                            beatFlag = true;
-                            currentBeatNum = i;
-                        }, trackTimingData.beats[i] * 1000, i);
-                        beatTimeouts.push(t);
-                    }
-
-                    // events on each bar
-                    for (var i=0; i<trackTimingData.downbeats.length; i++) {
-                        var t = window.setTimeout(function() {
-                            barFlag = true;
-                        }, trackTimingData.downbeats[i] * 1000);
-                        barTimeouts.push(t);
-                    }
-                }
             }
 
             makeRequest(url, callback);
@@ -264,9 +293,9 @@ daft punk remix example
 
         function setCurrentBeatNum(num) {
             num = Math.round(num);
-            currentBeatNum = num % trackTimingData.beats.length;
+            currentBeatNum = num % numBeats;
             if (currentBeatNum < 0) {
-                currentBeatNum += trackTimingData.beats.length;
+                currentBeatNum += numBeats;
             }
         }
 
@@ -279,10 +308,11 @@ daft punk remix example
             } else {
                 duration = currentTrackDuration - startTime;
             }
-            if (player) {
-                player.stop();
-                player.start('+0', startTime, duration);
-            }
+
+            beatPlayer.stop();
+            beatPlayer.start('+0', startTime, duration+releaseDur);
+            ampEnv.triggerAttackRelease(duration);
+
             beatFlag = true;  
             if (callback) {
                 window.setTimeout(function() {
@@ -312,9 +342,14 @@ daft punk remix example
 
         ext.everyBeat = function() {
             if (beatFlag) {
+                // console.log('beat time: ' + trackTimingData.beats[currentBeatNum] + ' ' + 
+                //     'measured time: ' + (Tone.now() - trackStartTime) + ' ' +
+                //     'diff: ' + ((Tone.now() - trackStartTime) - trackTimingData.beats[currentBeatNum])
+                //     );
                 window.setTimeout(function() {
                     beatFlag = false;
-                }, 100);
+                }, 10);
+                beatFlag = false;
                 return true;
             }
             return false;
@@ -324,7 +359,7 @@ daft punk remix example
             if (barFlag) {
                 window.setTimeout(function() {
                     barFlag = false;
-                }, 100);
+                }, 10);
                 return true;
             }
             return false;
@@ -345,8 +380,7 @@ daft punk remix example
               ['w', 'play beat %n and wait', 'playBeatAndWait', 4],
               [' ', 'stop the music', 'stopMusic'],
               ['h', 'every beat', 'everyBeat'],
-              ['h', 'every bar', 'everyBar'],
-
+              ['h', 'every bar', 'everyBar']
             ]
         };
 

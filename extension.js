@@ -1,16 +1,11 @@
 /*
 
-to do:
+to add (maybe):
 
-volume control
-low pass filter
-
+low pass filter?
 beats should be 1-indexed?
 reporter for number of beats?
 play music like %n and loop?
-
-song stepper example
-remix example
 
 */
 
@@ -23,19 +18,31 @@ remix example
         $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r7/Tone.min.js', startExtension);
     }
 
-    function startExtension() {
+    function startExtension() { 
 
+        // player for playing entire track
         var player = new Tone.Player().toMaster();
 
-        var beatPlayer = new Tone.Player();
-        var releaseDur = 0.1;
-        var ampEnv = new Tone.AmplitudeEnvelope({
-            "attack": 0.05,
-            "decay": 0,
-            "sustain": 10,
-            "release": releaseDur
-        }).toMaster();
-        beatPlayer.connect(ampEnv);
+        // beat players for playing individual beat at a time
+        var beatPlayers = [];
+        var releaseDur = 0.01;
+        for (var i=0; i<4; i++) {
+            var beatPlayer = new Tone.Player();
+            var ampEnv = new Tone.AmplitudeEnvelope({
+                "attack": 0.01,
+                "decay": 0,
+                "sustain": 1.0,
+                "release": releaseDur
+            }).toMaster();
+            beatPlayer.connect(ampEnv);
+            beatPlayer.ampEnv = ampEnv;
+            beatPlayers.push(beatPlayer);
+        }
+        currentBeatPlayerIndex = 0;
+
+        // gain node
+        var gain = new Tone.Gain();
+        Tone.Master.chain(gain);
 
         var audioContext = Tone.context;
 
@@ -233,7 +240,6 @@ remix example
                     trackTempo = 60 / beatLength;
 
                     // use the loop duration to set the number of beats
-
                     for (var i=0; i<trackTimingData.beats.length; i++) {
                         if (trackTimingData.loop_duration < trackTimingData.beats[i]) {
                             numBeats = i;
@@ -243,14 +249,14 @@ remix example
 
                     // decode and play the audio
                     audioContext.decodeAudioData(request.response, function(buffer) {
-                        currentTrackDuration = player.buffer.duration;
                         setupTimeouts();
                         player.buffer.set(buffer);
+                        currentTrackDuration = player.buffer.duration;
                         player.start(); 
                         trackStartTime = Tone.now();
-                        beatPlayer.buffer.set(buffer);
-                        // Tone.Transport.start();
-                        // player.start('+0', trackTimingData.beats[0]);
+                        for (var i=0; i<beatPlayers.length; i++) {
+                            beatPlayers[i].buffer.set(buffer);
+                        }
                         callback();   
                     }); 
                 }
@@ -302,16 +308,19 @@ remix example
         function playCurrentBeat(callback) {
             var startTime = trackTimingData.beats[currentBeatNum];
             var duration;
-            if ((currentBeatNum + 1) < trackTimingData.beats.length) {
+            if ((currentBeatNum + 1) < numBeats) {
                 var endTime = trackTimingData.beats[currentBeatNum+1];
                 duration = endTime - startTime;
             } else {
                 duration = currentTrackDuration - startTime;
             }
 
-            beatPlayer.stop();
-            beatPlayer.start('+0', startTime, duration+releaseDur);
-            ampEnv.triggerAttackRelease(duration);
+            beatPlayers[currentBeatPlayerIndex].ampEnv.triggerRelease();
+            beatPlayers[currentBeatPlayerIndex].stop(releaseDur);
+            currentBeatPlayerIndex++;
+            currentBeatPlayerIndex %= beatPlayers.length;
+            beatPlayers[currentBeatPlayerIndex].ampEnv.triggerAttackRelease(duration-releaseDur);
+            beatPlayers[currentBeatPlayerIndex].start('+0', startTime, duration);
 
             beatFlag = true;  
             if (callback) {
@@ -340,12 +349,28 @@ remix example
             }
         }
 
+        ext.changeVolume = function(num) {
+            num = num / 100;
+            var currentVol = gain.gain.value;
+            var newVol = currentVol + num;
+            newVol = Math.min(Math.max(0, newVol), 1);
+            // gain.gain.rampTo(newVol,0.01);
+            gain.gain.value = newVol;
+        };
+
+        ext.setVolume = function(num) {
+            num = num / 100;
+            var newVol = Math.min(Math.max(0, num), 1);
+            // gain.gain.rampTo(newVol,0.01);
+            gain.gain.value = newVol;
+        };
+
+        ext.volume = function() {
+            return gain.gain.value * 100;
+        };
+
         ext.everyBeat = function() {
             if (beatFlag) {
-                // console.log('beat time: ' + trackTimingData.beats[currentBeatNum] + ' ' + 
-                //     'measured time: ' + (Tone.now() - trackStartTime) + ' ' +
-                //     'diff: ' + ((Tone.now() - trackStartTime) - trackTimingData.beats[currentBeatNum])
-                //     );
                 window.setTimeout(function() {
                     beatFlag = false;
                 }, 10);
@@ -367,7 +392,7 @@ remix example
         // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              ['w', 'play music like %s', 'searchAndPlay', 'happy'],
+              ['w', 'play music like %s', 'searchAndPlay', 'pharrell happy'],
               ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
               ['r', 'track name', 'trackName'],
               ['r', 'artist name', 'artistName'],
@@ -377,6 +402,9 @@ remix example
               ['r', 'current beat', 'currentBeat'],
               [' ', 'play beat %n', 'playBeat', 4],
               ['w', 'play beat %n and wait', 'playBeatAndWait', 4],
+              [' ', 'change music volume by %n', 'changeVolume', -10],
+              [' ', 'set music volume to %n%', 'setVolume', 100],
+              ['r', 'music volume', 'volume'],
               [' ', 'stop the music', 'stopMusic'],
               ['h', 'every beat', 'everyBeat'],
               ['h', 'every bar', 'everyBar']

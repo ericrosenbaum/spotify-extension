@@ -394,20 +394,20 @@ play music like %n and loop?
             blocks: [
               ['w', 'play music like %s', 'searchAndPlay', 'pharrell happy'],
               ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
+              [' ', 'stop the music', 'stopMusic'],
               ['r', 'track name', 'trackName'],
               ['r', 'artist name', 'artistName'],
               ['r', 'album name', 'albumName'],
               ['r', 'track tempo', 'trackTempo'],
               [' ', 'play next beat', 'playNextBeat'],
-              ['r', 'current beat', 'currentBeat'],
               [' ', 'play beat %n', 'playBeat', 4],
               ['w', 'play beat %n and wait', 'playBeatAndWait', 4],
+              ['r', 'current beat', 'currentBeat'],
+              ['h', 'every beat', 'everyBeat'],
+              ['h', 'every bar', 'everyBar'],
               [' ', 'change music volume by %n', 'changeVolume', -10],
               [' ', 'set music volume to %n%', 'setVolume', 100],
               ['r', 'music volume', 'volume'],
-              [' ', 'stop the music', 'stopMusic'],
-              ['h', 'every beat', 'everyBeat'],
-              ['h', 'every bar', 'everyBar']
             ]
         };
 

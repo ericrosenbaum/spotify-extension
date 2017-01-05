@@ -1,21 +1,10 @@
-/*
-
-to add (maybe):
-
-low pass filter?
-beats should be 1-indexed?
-reporter for number of beats?
-play music like %n and loop?
-
-*/
-
 (function(ext) {
 
     if (typeof Tone !== 'undefined') {
         console.log('Tone library is already loaded');
         startExtension();
     } else {
-        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r7/Tone.min.js', startExtension);
+        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r8/Tone.min.js', startExtension);
     }
 
     function startExtension() { 
@@ -69,7 +58,11 @@ play music like %n and loop?
         // Status reporting code
         // Use this to report missing hardware, plugin or unsupported browser
         ext._getStatus = function() {
-            return {status: 2, msg: 'Ready'};
+            if (typeof AudioContext !== "undefined") {
+                return {status: 2, msg: 'Ready'};
+            } else {
+                return {status: 1, msg: 'Browser not supported'};
+            }
         };
 
         ext.searchAndPlayAndWait = function(query, callback) {
@@ -84,6 +77,7 @@ play music like %n and loop?
 
             if (player) {
                 player.stop();
+                clearTimeouts();
             }
 
             $.ajax({
@@ -151,7 +145,8 @@ play music like %n and loop?
 
         function setupTimeouts() {
             // events on each beat
-            for (var i=0; i<trackTimingData.beats.length; i++) {
+            beatTimeouts = [];
+            for (var i=0; i<numBeats; i++) {
                 var t = window.setTimeout(function(i) {
                     beatFlag = true;
                     currentBeatNum = i;
@@ -160,11 +155,14 @@ play music like %n and loop?
             }
 
             // events on each bar
+            barTimeouts = [];
             for (var i=0; i<trackTimingData.downbeats.length; i++) {
-                var t = window.setTimeout(function() {
-                    barFlag = true;
-                }, trackTimingData.downbeats[i] * 1000);
-                barTimeouts.push(t);
+                if (trackTimingData.downbeats[i] < trackTimingData.beats[numBeats-1]) {
+                    var t = window.setTimeout(function() {
+                        barFlag = true;
+                    }, trackTimingData.downbeats[i] * 1000);
+                    barTimeouts.push(t);
+                }
             }
         }
 
@@ -215,7 +213,12 @@ play music like %n and loop?
                 content += c;
                 i++;
               }
-              var js = eval('(' + content + ')');
+              var js = '';
+              try {
+                js = eval('(' + content + ')');
+              } catch (e) {
+                js = '';
+              }
               return js;
             }
 
@@ -228,6 +231,11 @@ play music like %n and loop?
                     var idx = findString(buffer, 'GEOB');
 
                     trackTimingData = getSection(buffer, idx + 1, 8);
+
+                    if (!trackTimingData) {
+                        callback();
+                        return;
+                    }
 
                     console.log(trackTimingData);
 
@@ -251,8 +259,8 @@ play music like %n and loop?
                     audioContext.decodeAudioData(request.response, function(buffer) {
                         setupTimeouts();
                         player.buffer.set(buffer);
-                        currentTrackDuration = player.buffer.duration;
-                        player.start(); 
+                        currentTrackDuration = trackTimingData.loop_duration;
+                        player.start(Tone.now(), 0, trackTimingData.loop_duration); 
                         trackStartTime = Tone.now();
                         for (var i=0; i<beatPlayers.length; i++) {
                             beatPlayers[i].buffer.set(buffer);
@@ -266,8 +274,17 @@ play music like %n and loop?
             makeRequest(url, callback);
         }
 
-        ext.trackName = function() {
-            return currentTrackName;
+        ext.trackData = function(dataType) {
+            switch (dataType) {
+                case 'track':
+                    return currentTrackName;
+                case 'artist':
+                    return currentArtistName;
+                case 'album':
+                    return currentAlbumName;
+                default:
+                    return '';                    
+            }
         };
 
         ext.artistName = function() {
@@ -326,7 +343,7 @@ play music like %n and loop?
             if (callback) {
                 window.setTimeout(function() {
                     callback();
-                }, duration * 1000);
+                }, (duration - (1/30)) * 1000);
             } 
         }
 
@@ -348,26 +365,6 @@ play music like %n and loop?
                 clearTimeout(barTimeouts[i]);
             }
         }
-
-        ext.changeVolume = function(num) {
-            num = num / 100;
-            var currentVol = gain.gain.value;
-            var newVol = currentVol + num;
-            newVol = Math.min(Math.max(0, newVol), 1);
-            // gain.gain.rampTo(newVol,0.01);
-            gain.gain.value = newVol;
-        };
-
-        ext.setVolume = function(num) {
-            num = num / 100;
-            var newVol = Math.min(Math.max(0, num), 1);
-            // gain.gain.rampTo(newVol,0.01);
-            gain.gain.value = newVol;
-        };
-
-        ext.volume = function() {
-            return gain.gain.value * 100;
-        };
 
         ext.everyBeat = function() {
             if (beatFlag) {
@@ -392,23 +389,20 @@ play music like %n and loop?
         // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              ['w', 'play music like %s', 'searchAndPlay', 'pharrell happy'],
-              ['w', 'play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
-              [' ', 'stop the music', 'stopMusic'],
-              ['r', 'track name', 'trackName'],
-              ['r', 'artist name', 'artistName'],
-              ['r', 'album name', 'albumName'],
-              ['r', 'track tempo', 'trackTempo'],
-              [' ', 'play next beat', 'playNextBeat'],
-              [' ', 'play beat %n', 'playBeat', 4],
-              ['w', 'play beat %n and wait', 'playBeatAndWait', 4],
-              ['r', 'current beat', 'currentBeat'],
-              ['h', 'every beat', 'everyBeat'],
-              ['h', 'every bar', 'everyBar'],
-              [' ', 'change music volume by %n', 'changeVolume', -10],
-              [' ', 'set music volume to %n%', 'setVolume', 100],
-              ['r', 'music volume', 'volume'],
-            ]
+              ['w', '♫ play music like %s', 'searchAndPlay', 'pharrell happy'],
+              ['w', '♫ play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
+              [' ', '♫ stop the music', 'stopMusic'],
+              ['r', '♫ %m.trackData name', 'trackData', 'track'],
+              [' ', '♫ play next beat', 'playNextBeat'],
+              [' ', '♫ play beat %n', 'playBeat', 4],
+              ['w', '♫ play beat %n and wait', 'playBeatAndWait', 4],
+              ['r', '♫ current beat', 'currentBeat'],
+              ['h', '♫ every beat', 'everyBeat'],
+              ['h', '♫ every bar', 'everyBar'],
+            ],
+            menus: {
+                trackData: ['track', 'artist', 'album']
+            }
         };
 
         // Register the extension

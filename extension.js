@@ -420,7 +420,7 @@
         };
 
         // Register the extension
-        ScratchExtensions.register('Spotify', descriptor, ext);
+        ScratchExtensions.register(extName, descriptor, ext);
     }
 
 })({});

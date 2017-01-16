@@ -11,6 +11,7 @@
 
         // load multiple tracks at once, to make mashups, by loading multiple copies of the extension
         // this works by adding a number to the end of the extension name
+        var extName = 'Spotify';
         var extNum = '1';
         for (var i=1; i<=8; i++) {
             if (window.ScratchExtensions.getStatus(extName + i).status != 2) {
@@ -18,7 +19,7 @@
                 break;
             }
         }
-        var extName = 'Spotify' + extNum;
+        extName += extNum;
 
 
         // player for playing entire track

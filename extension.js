@@ -282,6 +282,8 @@
                     return currentArtistName;
                 case 'album':
                     return currentAlbumName;
+                case 'full':
+                    return currentTrackName + ' by ' + currentArtistName + ' from ' + currentAlbumName;
                 default:
                     return '';                    
             }
@@ -401,7 +403,7 @@
               ['h', '♫ every bar', 'everyBar'],
             ],
             menus: {
-                trackData: ['track', 'artist', 'album']
+                trackData: ['track', 'artist', 'album', 'full']
             }
         };
 

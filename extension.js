@@ -401,19 +401,24 @@
             return false;
         };
 
+        // if you've loaded multiple copies of the extension, include extension number on each block
+        var num = '';
+        if (extNum != 1) {
+            num = extNum;
+        }
         // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              ['w', '♫ play music like %s', 'searchAndPlay', 'pharrell happy'],
-              ['w', '♫ play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
-              [' ', '♫ stop the music', 'stopMusic'],
-              ['r', '♫ %m.trackData name', 'trackData', 'track'],
-              [' ', '♫ play next beat', 'playNextBeat'],
-              [' ', '♫ play beat %n', 'playBeat', 4],
-              ['w', '♫ play beat %n and wait', 'playBeatAndWait', 4],
-              ['r', '♫ current beat', 'currentBeat'],
-              ['h', '♫ every beat', 'everyBeat'],
-              ['h', '♫ every bar', 'everyBar'],
+              ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'pharrell happy'],
+              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
+              [' ', '♫'+num+' stop the music', 'stopMusic'],
+              ['r', '♫'+num+' %m.trackData name', 'trackData', 'track'],
+              [' ', '♫'+num+' play next beat', 'playNextBeat'],
+              [' ', '♫'+num+' play beat %n', 'playBeat', 4],
+              ['w', '♫'+num+' play beat %n and wait', 'playBeatAndWait', 4],
+              ['r', '♫'+num+' current beat', 'currentBeat'],
+              ['h', '♫'+num+' every beat', 'everyBeat'],
+              ['h', '♫'+num+' every bar', 'everyBar'],
             ],
             menus: {
                 trackData: ['track', 'artist', 'album', 'full']

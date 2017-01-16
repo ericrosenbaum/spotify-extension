@@ -9,7 +9,17 @@
 
     function startExtension() { 
 
-        console.log(location.search);
+        // load multiple tracks at once, to make mashups, by loading multiple copies of the extension
+        // this works by adding a number to the end of the extension name
+        var extNum = '1';
+        for (var i=1; i<=8; i++) {
+            if (window.ScratchExtensions.getStatus(extName + i).status != 2) {
+                extNum = i;
+                break;
+            }
+        }
+        var extName = 'Spotify' + extNum;
+
 
         // player for playing entire track
         var player = new Tone.Player().toMaster();

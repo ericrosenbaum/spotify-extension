@@ -9,6 +9,8 @@
 
     function startExtension() { 
 
+        console.log(location.search);
+
         // player for playing entire track
         var player = new Tone.Player().toMaster();
 

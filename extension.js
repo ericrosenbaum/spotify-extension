@@ -12,15 +12,19 @@
         // load multiple tracks at once, to make mashups, by loading multiple copies of the extension
         // this works by adding a number to the end of the extension name
         var extName = 'Spotify';
-        var extNum = '1';
-        for (var i=1; i<=8; i++) {
-            if (window.ScratchExtensions.getStatus(extName + i).status != 2) {
-                extNum = i;
-                break;
-            }
-        }
+        var extNum = '';
+        // if the extension has been loaded once, we'll append a number
+        if (window.ScratchExtensions.getStatus(extName).status == 2) {
+        	// check for additional numbered copies, starting at 2
+	        for (var i=2; i<=8; i++) {
+	        	// if this number has not been loaded, use it
+	            if (window.ScratchExtensions.getStatus(extName + i).status != 2) {
+	                extNum = i;
+	                break;
+	            }
+	        }
+	    }
         extName += extNum;
-
 
         // player for playing entire track
         var player = new Tone.Player().toMaster();
@@ -402,11 +406,9 @@
         };
 
         // if you've loaded multiple copies of the extension, include extension number on each block
-        var num = '';
-        if (extNum != 1) {
-            num = extNum;
-        }
-        // Block and block menu descriptions
+        num = extNum;
+
+	    // Block and block menu descriptions
         var descriptor = {
             blocks: [
               ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'pharrell happy'],

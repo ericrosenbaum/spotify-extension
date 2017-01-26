@@ -389,7 +389,7 @@
             if (beatFlag) {
                 window.setTimeout(function() {
                     beatFlag = false;
-                }, 10);
+                }, 30);
                 return true;
             }
             return false;
@@ -399,7 +399,7 @@
             if (barFlag) {
                 window.setTimeout(function() {
                     barFlag = false;
-                }, 10);
+                }, 30);
                 return true;
             }
             return false;

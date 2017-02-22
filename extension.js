@@ -348,11 +348,13 @@
         };
 
         ext.playBeat = function(num) {
+            num -= 1; // one-indexing
             setCurrentBeatNum(num);
             playCurrentBeat();
         };
 
         ext.playBeatAndWait = function(num, callback) {
+            num -= 1; // one-indexing
             setCurrentBeatNum(num);
             playCurrentBeat(callback);
         };
@@ -391,7 +393,7 @@
         }
 
         ext.currentBeat = function() {
-            return currentBeatNum;
+            return currentBeatNum + 1; // one-indexing
         };
 
         ext.stopMusic = function() {

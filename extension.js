@@ -85,24 +85,34 @@
         };
 
         ext.searchAndPlayAndWait = function(query, callback) {
-            requestSearch(query).then(function() {
-                playTrack();
-                trackTimeout = window.setTimeout(function() {
+            requestSearch(query).then(
+                function() {
+                    playTrack();
+                    trackTimeout = window.setTimeout(function() {
+                        callback();
+                    }, (currentTrackDuration) * 1000);
+                },
+                function() {
                     callback();
-                }, (currentTrackDuration) * 1000);
-            });
+                } 
+            );
         };
 
         ext.searchAndPlay = function(query, callback) {
-            requestSearch(query).then(function() {
-                playTrack();
-                callback();
-            });
+            requestSearch(query).then(
+                function() {
+                    playTrack();
+                    callback();
+                },
+                function() {
+                    callback();
+                }   
+            );
         };
 
         function requestSearch(query) {
 
-            return new Promise(function (resolve) {
+            return new Promise(function (resolve, reject) {
 
                 if (player) {
                     player.stop();
@@ -110,7 +120,7 @@
                 }
 
                 if (query == prevQuery) {
-                    console.log('repeated query: ' + query);
+                    // console.log('repeated query: ' + query);
                     resolve();
                     return;
                 }
@@ -128,7 +138,7 @@
                         // fail if there are no tracks
                         if (!trackObjects) {
                             resetTrackData();
-                            resolve();
+                            reject();
                             return;
                         }
 
@@ -144,7 +154,7 @@
                         // fail if there were none without explicit lyrics
                         if (!trackObject) {
                             resetTrackData();
-                            resolve();
+                            reject();
                             return;
                         }
 
@@ -158,7 +168,7 @@
                         var trackURL = trackObject.preview_url;  
                         // console.log('trackURL: ' + trackURL);
 
-                        getTrackTimingData(trackURL, resolve);
+                        getTrackTimingData(trackURL, resolve, reject);
 
                     },
                     error: function() {
@@ -168,6 +178,9 @@
         };
 
         function playTrack() {
+            if (!player.buffer || !player.buffer.loaded || !trackTimingData) {
+                return;
+            }
             player.start(Tone.now(), 0, currentTrackDuration); 
             trackStartTime = Tone.now();
             setupTimeouts();
@@ -197,6 +210,7 @@
         }
 
         function resetTrackData() {
+            player = new Tone.Player().toMaster();
             currentArtistName = 'none';
             currentTrackName = 'none';
             currentAlbumName = 'none';
@@ -204,7 +218,7 @@
         }              
 
         // code adapted from spotify
-        function getTrackTimingData(url, callback) {
+        function getTrackTimingData(url, resolve, reject) {
 
             function findString(buffer, string) {
               for (var i = 0; i < buffer.length - string.length; i++) {
@@ -252,7 +266,7 @@
               return js;
             }
 
-            function makeRequest(url, callback) {
+            function makeRequest(url, resolve, reject) {
                 var request = new XMLHttpRequest();
                 request.open('GET', url, true);
                 request.responseType = 'arraybuffer';
@@ -263,7 +277,7 @@
                     trackTimingData = getSection(buffer, idx + 1, 8);
 
                     if (!trackTimingData) {
-                        callback();
+                        reject();
                         return;
                     }
 
@@ -287,21 +301,18 @@
 
                     // decode and play the audio
                     audioContext.decodeAudioData(request.response, function(buffer) {
-                        // setupTimeouts();
                         player.buffer.set(buffer);
                         currentTrackDuration = trackTimingData.loop_duration;
-                        // player.start(Tone.now(), 0, trackTimingData.loop_duration); 
-                        // trackStartTime = Tone.now();
                         for (var i=0; i<beatPlayers.length; i++) {
                             beatPlayers[i].buffer.set(buffer);
                         }
-                        callback();   
+                        resolve();   
                     }); 
                 }
                 request.send();
             }
 
-            makeRequest(url, callback);
+            makeRequest(url, resolve, reject);
         }
 
         ext.trackData = function(dataType) {

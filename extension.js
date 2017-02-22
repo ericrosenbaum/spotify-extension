@@ -375,6 +375,10 @@
             clearTimeouts();
         };
 
+        ext._stop = function() {
+            ext.stopMusic();
+        };
+
         function clearTimeouts() {
             clearTimeout(trackTimeout);
             for (var i=0; i<beatTimeouts.length; i++) {

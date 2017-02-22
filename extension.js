@@ -393,7 +393,7 @@
             if (beatFlag) {
                 window.setTimeout(function() {
                     beatFlag = false;
-                }, 30);
+                }, 60);
                 return true;
             }
             return false;
@@ -403,7 +403,7 @@
             if (barFlag) {
                 window.setTimeout(function() {
                     barFlag = false;
-                }, 30);
+                }, 60);
                 return true;
             }
             return false;

@@ -167,7 +167,7 @@
                 var t = window.setTimeout(function(i) {
                     beatFlag = true;
                     currentBeatNum = i;
-                }, trackTimingData.beats[i] * 1000, i);
+                }, (trackTimingData.beats[i] - 0.1) * 1000, i);
                 beatTimeouts.push(t);
             }
 
@@ -177,7 +177,7 @@
                 if (trackTimingData.downbeats[i] < trackTimingData.beats[numBeats-1]) {
                     var t = window.setTimeout(function() {
                         barFlag = true;
-                    }, trackTimingData.downbeats[i] * 1000);
+                    }, (trackTimingData.downbeats[i] - 0.1) * 1000);
                     barTimeouts.push(t);
                 }
             }

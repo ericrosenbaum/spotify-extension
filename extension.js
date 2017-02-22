@@ -69,6 +69,8 @@
         var currentAlbumName = 'none';
         var numBeats = 0;
 
+        var prevQuery = '';
+
         // Cleanup function when the extension is unloaded
         ext._shutdown = function() {};
 
@@ -83,82 +85,93 @@
         };
 
         ext.searchAndPlayAndWait = function(query, callback) {
-            requestSearchAndPlay(query, true, callback);
+            requestSearch(query).then(function() {
+                playTrack();
+                trackTimeout = window.setTimeout(function() {
+                    callback();
+                }, (currentTrackDuration) * 1000);
+            });
         };
 
         ext.searchAndPlay = function(query, callback) {
-            requestSearchAndPlay(query, false, callback);
-        };
-
-        function requestSearchAndPlay(query, waitForTrackToEnd, callback) {
-
-            if (player) {
-                player.stop();
-                clearTimeouts();
-            }
-
-            $.ajax({
-                url: 'https://api.spotify.com/v1/search',
-                data: {
-                    q: query,
-                    type: 'track'
-                },
-                success: function (response) {
-                    var trackObjects = response['tracks']['items'];
-
-                    // fail if there are no tracks
-                    if (!trackObjects) {
-                        resetTrackData();
-                        callback();
-                        return;
-                    }
-
-                    // find the first result without explicit lyrics
-                    var trackObject;
-                    for (var i=0; i<trackObjects.length; i++) {
-                        if (!trackObjects[i].explicit) {
-                            trackObject = trackObjects[i];
-                            break;
-                        }
-                    }
-
-                    // fail if there were none without explicit lyrics
-                    if (!trackObject) {
-                        resetTrackData();
-                        callback();
-                        return;
-                    }
-
-                    // store track name, artist, album
-                    currentArtistName = trackObject.artists[0].name;
-                    currentTrackName = trackObject.name;
-                    currentAlbumName = trackObject.album.name;
-
-                    currentBeatNum = 0;
-
-                    // download track, get timing data, and play it
-
-                    var trackURL = trackObject.preview_url;  
-                    console.log('trackURL: ' + trackURL);
-
-                    getTrackTimingData(trackURL, trackFinishedLoading);
-            
-                    function trackFinishedLoading() {
-                        if (!waitForTrackToEnd) {
-                            callback();
-                        } else {
-                            trackTimeout = window.setTimeout(function() {
-                                callback();
-                            }, currentTrackDuration*1000);
-                        }
-                    }
-
-                },
-                error: function() {
-                }
+            requestSearch(query).then(function() {
+                playTrack();
+                callback();
             });
-        
         };
+
+        function requestSearch(query) {
+
+            return new Promise(function (resolve) {
+
+                if (player) {
+                    player.stop();
+                    clearTimeouts();
+                }
+
+                if (query == prevQuery) {
+                    console.log('repeated query: ' + query);
+                    resolve();
+                    return;
+                }
+                prevQuery = query;
+
+                $.ajax({
+                    url: 'https://api.spotify.com/v1/search',
+                    data: {
+                        q: query,
+                        type: 'track'
+                    },
+                    success: function (response) {
+                        var trackObjects = response['tracks']['items'];
+
+                        // fail if there are no tracks
+                        if (!trackObjects) {
+                            resetTrackData();
+                            resolve();
+                            return;
+                        }
+
+                        // find the first result without explicit lyrics
+                        var trackObject;
+                        for (var i=0; i<trackObjects.length; i++) {
+                            if (!trackObjects[i].explicit) {
+                                trackObject = trackObjects[i];
+                                break;
+                            }
+                        }
+
+                        // fail if there were none without explicit lyrics
+                        if (!trackObject) {
+                            resetTrackData();
+                            resolve();
+                            return;
+                        }
+
+                        // store track name, artist, album
+                        currentArtistName = trackObject.artists[0].name;
+                        currentTrackName = trackObject.name;
+                        currentAlbumName = trackObject.album.name;
+
+                        currentBeatNum = 0;
+
+                        var trackURL = trackObject.preview_url;  
+                        // console.log('trackURL: ' + trackURL);
+
+                        getTrackTimingData(trackURL, resolve);
+
+                    },
+                    error: function() {
+                    }
+                });
+            });
+        };
+
+        function playTrack() {
+            player.start(Tone.now(), 0, currentTrackDuration); 
+            trackStartTime = Tone.now();
+            setupTimeouts();
+        }
 
         function setupTimeouts() {
             // events on each beat
@@ -254,7 +267,7 @@
                         return;
                     }
 
-                    console.log(trackTimingData);
+                    // console.log(trackTimingData);
 
                     // estimate the tempo using the average time interval between beats
                     var sum =0;
@@ -274,11 +287,11 @@
 
                     // decode and play the audio
                     audioContext.decodeAudioData(request.response, function(buffer) {
-                        setupTimeouts();
+                        // setupTimeouts();
                         player.buffer.set(buffer);
                         currentTrackDuration = trackTimingData.loop_duration;
-                        player.start(Tone.now(), 0, trackTimingData.loop_duration); 
-                        trackStartTime = Tone.now();
+                        // player.start(Tone.now(), 0, trackTimingData.loop_duration); 
+                        // trackStartTime = Tone.now();
                         for (var i=0; i<beatPlayers.length; i++) {
                             beatPlayers[i].buffer.set(buffer);
                         }

@@ -430,7 +430,6 @@
             blocks: [
               ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'pharrell happy'],
               ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'michael jackson'],
-              [' ', '♫'+num+' stop the music', 'stopMusic'],
               ['r', '♫'+num+' %m.trackData name', 'trackData', 'track'],
               [' ', '♫'+num+' play next beat', 'playNextBeat'],
               [' ', '♫'+num+' play beat %n', 'playBeat', 4],
@@ -438,6 +437,7 @@
               ['r', '♫'+num+' current beat', 'currentBeat'],
               ['h', '♫'+num+' every beat', 'everyBeat'],
               ['h', '♫'+num+' every bar', 'everyBar'],
+              [' ', '♫'+num+' stop the music', 'stopMusic']
             ],
             menus: {
                 trackData: ['track', 'artist', 'album', 'full']

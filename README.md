@@ -11,5 +11,8 @@ http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/music
 Beat Stepper:
 http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/beat%20stepper.sbx#scratch
 
+Don't Stop Cowbell:
+http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/dont%20stop%20cowbell.sbx#scratch
+
 "Everything is Awesome" remix:
 http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/everything%20is%20awesome%20remix.sbx#scratch

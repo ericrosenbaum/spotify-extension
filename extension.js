@@ -144,32 +144,24 @@
                         }
 
                         // find the first result without explicit lyrics
-                        var trackObject;
+                        var notExplicit = false;
                         for (var i=0; i<trackObjects.length; i++) {
                             if (!trackObjects[i].explicit) {
-                                trackObject = trackObjects[i];
+                                trackObjects = trackObjects.slice(i);
+                                notExplicit = true;
                                 break;
                             }
                         }
 
                         // fail if there were none without explicit lyrics
-                        if (!trackObject) {
+                        if (!notExplicit) {
                             resetTrackData();
+                            console.log('no results without explicit lyrics');
                             reject();
                             return;
                         }
 
-                        // store track name, artist, album
-                        currentArtistName = trackObject.artists[0].name;
-                        currentTrackName = trackObject.name;
-                        currentAlbumName = trackObject.album.name;
-
-                        currentBeatNum = 0;
-
-                        var trackURL = trackObject.preview_url;  
-                        // console.log('trackURL: ' + trackURL);
-
-                        getTrackTimingData(trackURL, resolve, reject);
+                        keepTryingToGetTimingData(trackObjects, resolve, reject);
 
                     },
                     error: function() {
@@ -177,6 +169,30 @@
                 });
             });
         };
+
+        function keepTryingToGetTimingData(trackObjects, resolve, reject) {
+            getTrackTimingData(trackObjects[0].preview_url).then(
+            	function() {
+                    // store track name, artist, album
+                    currentArtistName = trackObjects[0].artists[0].name;
+                    currentTrackName = trackObjects[0].name;
+                    currentAlbumName = trackObjects[0].album.name;
+                    currentBeatNum = 0;
+            		console.log('got timing data');
+            		resolve();
+            	},
+            	function() {
+            		console.log('no timing data');
+            		if (trackObjects.length > 1) {
+            			trackObjects = trackObjects.slice(1);
+            			keepTryingToGetTimingData(trackObjects, resolve, reject);
+            		} else {
+            			console.log('no more results');
+            			reject();
+            		}
+            	}
+            );
+        }
 
         function playTrack() {
             if (!player.buffer || !player.buffer.loaded || !trackTimingData) {
@@ -219,101 +235,103 @@
         }              
 
         // code adapted from spotify
-        function getTrackTimingData(url, resolve, reject) {
+        function getTrackTimingData(url) {
 
-            function findString(buffer, string) {
-              for (var i = 0; i < buffer.length - string.length; i++) {
-                var match = true;
-                for (var j = 0; j < string.length; j++) {
-                  var c = String.fromCharCode(buffer[i + j]);
-                  if (c !== string[j]) {
-                    match = false;
-                    break;
-                  }
-                }
-                if (match) {
-                  return i;
-                }
-              }
-              return -1;
-            }
+            return new Promise(function (resolve, reject) {
 
-            function getSection(buffer, start, which) {
-              var sectionCount = 0;
-              for (var i = start; i < buffer.length; i++) {
-                if (buffer[i] == 0) {
-                  sectionCount++;
-                }
-                if (sectionCount >= which) {
-                  break;
-                }
-              }
-              i++;
-              var content = '';
-              while (i < buffer.length) {
-                if (buffer[i] == 0) {
-                  break;
-                }
-                var c = String.fromCharCode(buffer[i]);
-                content += c;
-                i++;
-              }
-              var js = '';
-              try {
-                js = eval('(' + content + ')');
-              } catch (e) {
-                js = '';
-              }
-              return js;
-            }
+	            function findString(buffer, string) {
+	              for (var i = 0; i < buffer.length - string.length; i++) {
+	                var match = true;
+	                for (var j = 0; j < string.length; j++) {
+	                  var c = String.fromCharCode(buffer[i + j]);
+	                  if (c !== string[j]) {
+	                    match = false;
+	                    break;
+	                  }
+	                }
+	                if (match) {
+	                  return i;
+	                }
+	              }
+	              return -1;
+	            }
 
-            function makeRequest(url, resolve, reject) {
-                var request = new XMLHttpRequest();
-                request.open('GET', url, true);
-                request.responseType = 'arraybuffer';
-                request.onload = function() {
-                    var buffer = new Uint8Array(this.response); // this.response == uInt8Array.buffer
-                    var idx = findString(buffer, 'GEOB');
+	            function getSection(buffer, start, which) {
+	              var sectionCount = 0;
+	              for (var i = start; i < buffer.length; i++) {
+	                if (buffer[i] == 0) {
+	                  sectionCount++;
+	                }
+	                if (sectionCount >= which) {
+	                  break;
+	                }
+	              }
+	              i++;
+	              var content = '';
+	              while (i < buffer.length) {
+	                if (buffer[i] == 0) {
+	                  break;
+	                }
+	                var c = String.fromCharCode(buffer[i]);
+	                content += c;
+	                i++;
+	              }
+	              var js = '';
+	              try {
+	                js = eval('(' + content + ')');
+	              } catch (e) {
+	                js = '';
+	              }
+	              return js;
+	            }
 
-                    trackTimingData = getSection(buffer, idx + 1, 8);
+	            function makeRequest(url, resolve, reject) {
+	                var request = new XMLHttpRequest();
+	                request.open('GET', url, true);
+	                request.responseType = 'arraybuffer';
+	                request.onload = function() {
+	                    var buffer = new Uint8Array(this.response); // this.response == uInt8Array.buffer
+	                    var idx = findString(buffer, 'GEOB');
 
-                    if (!trackTimingData) {
-                        reject();
-                        return;
-                    }
+	                    trackTimingData = getSection(buffer, idx + 1, 8);
 
-                    // console.log(trackTimingData);
+	                    if (!trackTimingData) {
+	                        reject();
+	                        return;
+	                    }
 
-                    // estimate the tempo using the average time interval between beats
-                    var sum =0;
-                    for (var i=0; i<trackTimingData.beats.length-1; i++) {
-                        sum += trackTimingData.beats[i+1] - trackTimingData.beats[i];
-                    }
-                    var beatLength = sum / (trackTimingData.beats.length - 1);
-                    trackTempo = 60 / beatLength;
+	                    // estimate the tempo using the average time interval between beats
+	                    var sum =0;
+	                    for (var i=0; i<trackTimingData.beats.length-1; i++) {
+	                        sum += trackTimingData.beats[i+1] - trackTimingData.beats[i];
+	                    }
+	                    var beatLength = sum / (trackTimingData.beats.length - 1);
+	                    trackTempo = 60 / beatLength;
 
-                    // use the loop duration to set the number of beats
-                    for (var i=0; i<trackTimingData.beats.length; i++) {
-                        if (trackTimingData.loop_duration < trackTimingData.beats[i]) {
-                            numBeats = i;
-                            break;
-                        }
-                    }
+	                    // use the loop duration to set the number of beats
+	                    for (var i=0; i<trackTimingData.beats.length; i++) {
+	                        if (trackTimingData.loop_duration < trackTimingData.beats[i]) {
+	                            numBeats = i;
+	                            break;
+	                        }
+	                    }
 
-                    // decode and play the audio
-                    audioContext.decodeAudioData(request.response, function(buffer) {
-                        player.buffer.set(buffer);
-                        currentTrackDuration = trackTimingData.loop_duration;
-                        for (var i=0; i<beatPlayers.length; i++) {
-                            beatPlayers[i].buffer.set(buffer);
-                        }
-                        resolve();   
-                    }); 
-                }
-                request.send();
-            }
+	                    // decode the audio
+	                    audioContext.decodeAudioData(request.response, function(buffer) {
+	                        player.buffer.set(buffer);
+	                        currentTrackDuration = trackTimingData.loop_duration;
+	                        for (var i=0; i<beatPlayers.length; i++) {
+	                            beatPlayers[i].buffer.set(buffer);
+	                        }
+	                        resolve();   
+	                    }); 
+	                }
+	                request.send();
+	            }
 
-            makeRequest(url, resolve, reject);
+	            makeRequest(url, resolve, reject);
+
+	        });
         }
 
         ext.trackData = function(dataType) {

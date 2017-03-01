@@ -119,8 +119,9 @@
                     clearTimeouts();
                 }
 
+                // if we are making the exact same query again, abort
+                // keeping the same metadata, no need to reload
                 if (query == prevQuery) {
-                    // console.log('repeated query: ' + query);
                     resolve();
                     return;
                 }

@@ -178,11 +178,10 @@
                     currentTrackName = trackObjects[0].name;
                     currentAlbumName = trackObjects[0].album.name;
                     currentBeatNum = 0;
-            		console.log('got timing data');
             		resolve();
             	},
             	function() {
-            		console.log('no timing data');
+            		console.log('no timing data, trying next track');
             		if (trackObjects.length > 1) {
             			trackObjects = trackObjects.slice(1);
             			keepTryingToGetTimingData(trackObjects, resolve, reject);

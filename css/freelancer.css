@@ -28,8 +28,8 @@ h4,
 h5,
 h6 {
   font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  text-transform: uppercase;
-  font-weight: 700;
+/*  text-transform: uppercase;
+*/  font-weight: 700;
 }
 hr.star-light,
 hr.star-primary {
@@ -68,14 +68,12 @@ hr.star-primary:after {
   margin: 0 auto;
 }
 header {
-  text-align: center;
   color: white;
 }
 header .container {
-  padding-top: 100px;
-  padding-bottom: 50px;
-  height: 525px;
-}
+/*  padding-top: 150px;
+  padding-bottom: 20px;
+*/}
 header img {
   display: inline-block;
 }
@@ -92,8 +90,8 @@ header .intro-text .skills {
 }
 @media (min-width: 768px) {
   header .container {
-    padding-top: 100px;
-    padding-bottom: 100px;
+    padding-top: 120px;
+    padding-bottom: 20px;
   }
   header .intro-text .name {
     font-size: 4.75em;
@@ -105,8 +103,8 @@ header .intro-text .skills {
 .navbar-custom {
   background: #197538;
   font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  text-transform: uppercase;
-  font-weight: 700;
+/*  text-transform: uppercase;
+*/  font-weight: 700;
   border: none;
 }
 .navbar-custom a:focus {

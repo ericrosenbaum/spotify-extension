@@ -119,6 +119,8 @@
                     clearTimeouts();
                 }
 
+                currentBeatNum = 0;
+
                 // if we are making the exact same query again, abort
                 // keeping the same metadata, no need to reload
                 if (query == prevQuery) {
@@ -177,7 +179,6 @@
                     currentArtistName = trackObjects[0].artists[0].name;
                     currentTrackName = trackObjects[0].name;
                     currentAlbumName = trackObjects[0].album.name;
-                    currentBeatNum = 0;
             		resolve();
             	},
             	function() {

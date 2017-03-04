@@ -70,7 +70,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div>
-                        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ub5E0Khz8Og?rel=0&amp;showinfo=0?ecver=1" frameborder="0"allowfullscreen></iframe>
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/e9pdE-mf0j0?rel=0&amp;showinfo=0?ecver=1" frameborder="0"allowfullscreen></iframe>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -93,7 +93,7 @@
 
     <!-- Examples Section -->
 
-    <section class="darker" id="examples">
+    <section class="darker blocks" id="examples">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 text-center">
@@ -183,15 +183,15 @@
         <div class="container">
              <div class="row">
                 <div class="col-md-4">
-                    <a href="http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/examples/dont-stop-cowbell.sbx#scratch" target="_blank">
-                    <img src="img/dont-stop-cowbell.png">
+                    <a href="http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/examples/beethoven-cowbell.sbx#scratch" target="_blank">
+                    <img src="img/beethoven-cowbell.png">
                     </a>
                 </div>
                 <div class="col-md-8">
-                    <a href="http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/examples/dont-stop-cowbell.sbx#scratch" target="_blank">
-                    <h3>Don't Stop Believin' + COWBELL</h3>
+                    <a href="http://scratchx.org/?url=https://ericrosenbaum.github.io/spotify-extension/examples/beethoven-cowbell.sbx#scratch" target="_blank">
+                    <h3>Beethoven + COWBELL</h3>
                     </a>
-                    <p>Add cowbell on every beat of the classic Journey song... or any song at all! I recommend adding cowbell to "Beethoven 5th."</p>
+                    <p>Add cowbell on every beat of the symphony... or any song at all! What else needs more cowbell?</p>
                 </div>
             </div>
         </div>
@@ -208,96 +208,61 @@
                 </div>
             </div>
         </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/play-music-like.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/play-music-like-and-wait.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/track-name.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/play-next-beat.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/play-beat.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/play-beat-and-wait.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/current-beat.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/every-beat.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/every-bar.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img src="img/blocks/stop.png">
-                </div>
-                <div class="col-md-8">
-                </div>
-            </div>
-        </div>
+        <table class="table table-striped borderless">
+            <tr>
+                <td><img src="img/blocks/play-music-like.png"></td>
+                <td><p>Enter the name of a song, musician, or album (or just type in anything!), and it will play the first search result from Spotify.</p></td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/play-music-like-and-wait.png"></td>
+                <td><p>As above, but the block waits until the music clip (up to 30 seconds) has ended. Put this block inside a forever to seamlessly loop the music.</p>
+                <img src="img/blocks-examples/forever-jungle-boogie.png">
+            </tr>
+            <tr>
+                <td><img src="img/blocks/track-name.png"></td>
+                <td><p>Report the track name, artist name, album name, or full name combining all three (then you get [track] by [artist] from [album]).</p></td>
+            </tr>
+
+            <tr>
+                <td><img src="img/blocks/play-next-beat.png"></td>
+                <td><p>Play the next beat of the song. Try to connecting this to a "When Key Pressed" block, and tap it in time to perform the song.</p>
+                <img src="img/blocks-examples/space-play-next-beat.png">
+                </td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/play-beat.png"></td>
+                <td><p>Play a single beat of the song. Try connecting several of these with different numbers to different "When Key Pressed" blocks, to make a beat pad. Turn a song into an instrument!</p>
+                <img src="img/blocks-examples/arrow-keys-beats.png">
+                </td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/play-beat-and-wait.png"></td>
+                <td><p>Play a single beat and wait. Try stacking these together in a loop to make your own remix. Get some variety by setting the beat number with a random number or a variable.</p>
+                <img src="img/blocks-examples/repeat-play-beat.png">
+                </td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/current-beat.png"></td>
+                <td><p>Reports the current beat number as the song plays.</p></td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/every-beat.png"></td>
+                <td><p>Do something every beat of the song. This lets you animate in time to the music- or even add your own sounds (more cowbell?).</p>
+                <img src="img/blocks-examples/every-beat-next-costume.png">
+                </td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/every-bar.png"></td>
+                <td><p>Do something every bar of the song, which is usually every four beats. Add some variety to your animation!</p>
+                <img src="img/blocks-examples/every-bar-animate.png">
+                </td>
+            </tr>
+            <tr>
+                <td><img src="img/blocks/stop.png"></td>
+                <td><p>Stop the song. You can also press the "stop" button next to the green flag.</p></td>
+            </tr>
+        </table>
+
     </section>
 
 

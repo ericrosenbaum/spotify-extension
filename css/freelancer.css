@@ -76,6 +76,7 @@ header .container {
 */}
 header img {
   display: inline-block;
+  margin: 10px;
 }
 header .intro-text .name {
   display: block;
@@ -526,6 +527,14 @@ section {
 }
 
 section img {
-  margin: 10px;
+  margin: 5px;
 }
 
+.table-striped>tbody>tr:nth-child(odd)>td {
+  background-color: #191919;
+  border: none !important;
+ }
+
+ .borderless td {
+  border: none !important;
+ }

@@ -71,8 +71,8 @@ header img {
 .navbar-custom {
   background: #197538;
   font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
-/*  text-transform: uppercase;
-*/  font-weight: 700;
+  font-weight: 700;
+  font-size: 20px;
   border: none;
 }
 .navbar-custom a:focus {

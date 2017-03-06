@@ -387,6 +387,12 @@
         }
 
         function playCurrentBeat(callback) {
+            // if the track is playing, stop it
+            if (player) {
+                player.stop();
+                clearTimeouts();
+            }
+
             var startTime = trackTimingData.beats[currentBeatNum];
             var duration;
             if ((currentBeatNum + 1) < numBeats) {

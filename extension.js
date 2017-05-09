@@ -479,7 +479,8 @@
             ],
             menus: {
                 trackData: ['track', 'artist', 'album', 'full']
-            }
+            },
+            url: 'https://ericrosenbaum.github.io/spotify-extension/'
         };
 
         // Register the extension

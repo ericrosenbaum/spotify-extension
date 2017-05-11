@@ -474,7 +474,7 @@
               ['w', '♫'+num+' play beat %n and wait', 'playBeatAndWait', 4],
               ['r', '♫'+num+' current beat', 'currentBeat'],
               ['h', '♫'+num+' every beat', 'everyBeat'],
-              ['h', '♫'+num+' every bar', 'everyBar'],
+              ['h', '♫'+num+' every 4 beats', 'everyBar'],
               [' ', '♫'+num+' stop the music', 'stopMusic']
             ],
             menus: {

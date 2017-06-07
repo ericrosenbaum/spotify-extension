@@ -2,12 +2,35 @@
 
     if (typeof Tone !== 'undefined') {
         console.log('Tone library is already loaded');
-        startExtension();
+        getTokenAndStart();
     } else {
-        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r8/Tone.min.js', startExtension);
+        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r8/Tone.min.js', getTokenAndStart);
     }
 
-    function startExtension() { 
+    function getTokenAndStart() {
+        getAccessToken().then((token) => {
+            startExtension(token);
+        });
+    }
+
+    function getAccessToken() {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: 'http://localhost:8888',
+                success: function (response) {
+                    resolve(response);
+                },
+                error: function (error) {
+                    console.log(error);
+                    reject();
+                }
+            });
+        });
+    }
+
+    function startExtension(token) { 
+
+        var spotifyToken = token;
 
         // load multiple tracks at once, to make mashups, by loading multiple copies of the extension
         // this works by adding a number to the end of the extension name
@@ -127,15 +150,20 @@
                     resolve();
                     return;
                 }
-                prevQuery = query;
 
                 $.ajax({
                     url: 'https://api.spotify.com/v1/search',
+                    headers: {
+                        'Authorization': 'Bearer ' + spotifyToken
+                    },
                     data: {
                         q: query,
                         type: 'track'
                     },
                     success: function (response) {
+
+                        prevQuery = query;
+
                         var trackObjects = response['tracks']['items'];
 
                         // fail if there are no tracks
@@ -166,7 +194,16 @@
                         keepTryingToGetTimingData(trackObjects, resolve, reject);
 
                     },
-                    error: function() {
+                    error: function(error) {
+                        // if the error is a 401 (unauthorized), the token probably has expired,
+                        // so request a new one. this request fails, but if the user tries again
+                        // it should succeed
+                        if (error.status == 401) {
+                            getAccessToken().then((token) => {
+                                spotifyToken = token;
+                                reject();
+                            });
+                        }
                     }
                 });
             });
@@ -239,6 +276,11 @@
 
             return new Promise(function (resolve, reject) {
 
+                if (!url) {
+                    reject();
+                    return;
+                }
+
 	            function findString(buffer, string) {
 	              for (var i = 0; i < buffer.length - string.length; i++) {
 	                var match = true;
@@ -286,6 +328,12 @@
 	            }
 
 	            function makeRequest(url, resolve, reject) {
+
+                    if (!url) {
+                        reject();
+                        return;
+                    }
+
 	                var request = new XMLHttpRequest();
 	                request.open('GET', url, true);
 	                request.responseType = 'arraybuffer';

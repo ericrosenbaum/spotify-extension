@@ -16,7 +16,7 @@
     function getAccessToken() {
         return new Promise((resolve, reject) => {
             $.ajax({
-                url: 'http://localhost:8888',
+                url: 'https://u61j2fb017.execute-api.us-east-1.amazonaws.com/prod/get-spotify-token',
                 success: function (response) {
                     resolve(response);
                 },

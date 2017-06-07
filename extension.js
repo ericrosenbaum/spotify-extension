@@ -18,11 +18,13 @@
             $.ajax({
                 url: 'https://u61j2fb017.execute-api.us-east-1.amazonaws.com/prod/get-spotify-token',
                 success: function (response) {
-                    resolve(response);
+                    console.log('response: ' + response.responseText);
+                    resolve(response.responseText);
                 },
                 error: function (error) {
+                    console.log('error');
                     console.log(error);
-                    reject();
+                    resolve(error.responseText);
                 }
             });
         });

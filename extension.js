@@ -142,6 +142,11 @@
                     clearTimeouts();
                 }
 
+                if (query == '') {
+                    resolve();
+                    return;
+                }
+
                 currentBeatNum = 0;
 
                 // if we are making the exact same query again, abort

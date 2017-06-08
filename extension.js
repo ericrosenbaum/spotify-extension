@@ -519,9 +519,9 @@
 	    // Block and block menu descriptions
         var descriptor = {
             blocks: [
-              ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'stevie wonder'],
-              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'cantaloop'],
-              ['r', '♫'+num+' %m.trackData name', 'trackData', 'track'],
+              ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'tacos'],
+              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'chance'],
+              ['r', '♫'+num+' %m.trackData name', 'trackData', 'full'],
               [' ', '♫'+num+' play next beat', 'playNextBeat'],
               [' ', '♫'+num+' play beat %n', 'playBeat', 4],
               ['w', '♫'+num+' play beat %n and wait', 'playBeatAndWait', 4],

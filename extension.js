@@ -18,11 +18,16 @@
             $.ajax({
                 url: 'https://u61j2fb017.execute-api.us-east-1.amazonaws.com/prod/get-spotify-token',
                 success: function (response) {
-                    resolve(response.responseText);
+                    // console.log('success');
+                    // console.log(response);
+                    resolve(response.token);
                 },
                 error: function (error) {
-                    // this is a crazy workaround...
-                    resolve(error.responseText);
+                    console.log('error');
+                    console.log(error);
+                    // // this is a crazy workaround...
+                    // resolve(error.responseText);
+                    reject();
                 }
             });
         });
@@ -520,7 +525,7 @@
         var descriptor = {
             blocks: [
               ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'tacos'],
-              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'chance'],
+              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'lauryn hill'],
               ['r', '♫'+num+' %m.trackData name', 'trackData', 'full'],
               [' ', '♫'+num+' play next beat', 'playNextBeat'],
               [' ', '♫'+num+' play beat %n', 'playBeat', 4],

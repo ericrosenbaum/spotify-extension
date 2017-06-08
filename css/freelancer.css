@@ -15,9 +15,8 @@ p.small {
 }
 
 b {
-  /*bright green*/
   font-size: 20px;
-  color: #59ff91; 
+  color: #aaaaaa;
 }
 
 a,
@@ -25,7 +24,7 @@ a:hover,
 a:focus,
 a:active,
 a.active {
-  color: #aaaaaa;
+  color: #59ff91;   /*bright green*/
   outline: none;
 }
 h1,

@@ -229,7 +229,7 @@
             		resolve();
             	},
             	function() {
-            		console.log('no timing data, trying next track');
+            		console.log('no timing data for ' + trackObjects[0].name +', trying next track');
             		if (trackObjects.length > 1) {
             			trackObjects = trackObjects.slice(1);
             			keepTryingToGetTimingData(trackObjects, resolve, reject);

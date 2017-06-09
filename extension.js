@@ -256,6 +256,7 @@
             			keepTryingToGetTimingData(trackObjects, resolve, reject);
             		} else {
             			console.log('no more results');
+                        resetTrackData();
             			reject();
             		}
             	}

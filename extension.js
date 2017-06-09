@@ -17,20 +17,36 @@
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: 'https://u61j2fb017.execute-api.us-east-1.amazonaws.com/prod/get-spotify-token',
-                success: function (response) {
-                    // console.log('success');
-                    // console.log(response);
-                    resolve(response.token);
+                success: function (response) { 
+                    var token = {};                   
+                    token.expirationTime = currentTimeSec() + 3600;
+                    token.value = response.token;
+                    resolve(token);
                 },
                 error: function (error) {
-                    console.log('error');
                     console.log(error);
-                    // // this is a crazy workaround...
-                    // resolve(error.responseText);
                     reject();
                 }
             });
         });
+    }
+
+    function refreshAccessTokenIfNeeded(token) {
+        return new Promise((resolve, reject) => {
+            if (currentTimeSec() > token.expirationTime) {
+                getAccessToken().then((newToken) => {
+                    token = newToken;
+                    console.log('token expired, got a new one')
+                    resolve(token);
+                });
+            } else {
+                resolve(token);
+            }
+        });
+    }
+
+    function currentTimeSec() {
+        return new Date().getTime() / 1000;
     }
 
     function startExtension(token) { 
@@ -113,29 +129,35 @@
         };
 
         ext.searchAndPlayAndWait = function(query, callback) {
-            requestSearch(query).then(
-                function() {
-                    playTrack();
-                    trackTimeout = window.setTimeout(function() {
+            refreshAccessTokenIfNeeded(spotifyToken).then(function(token) {
+                spotifyToken = token
+                requestSearch(query).then(
+                    function() {
+                        playTrack();
+                        trackTimeout = window.setTimeout(function() {
+                            callback();
+                        }, (currentTrackDuration) * 1000);
+                    },
+                    function() {
                         callback();
-                    }, (currentTrackDuration) * 1000);
-                },
-                function() {
-                    callback();
-                } 
-            );
+                    } 
+                );
+            });
         };
 
         ext.searchAndPlay = function(query, callback) {
-            requestSearch(query).then(
-                function() {
-                    playTrack();
-                    callback();
-                },
-                function() {
-                    callback();
-                }   
-            );
+            refreshAccessTokenIfNeeded(spotifyToken).then(function(token) {
+                spotifyToken = token
+                requestSearch(query).then(
+                    function() {
+                        playTrack();
+                        callback();
+                    },
+                    function() {
+                        callback();
+                    }   
+                );
+            });
         };
 
         function requestSearch(query) {
@@ -164,7 +186,7 @@
                 $.ajax({
                     url: 'https://api.spotify.com/v1/search',
                     headers: {
-                        'Authorization': 'Bearer ' + spotifyToken
+                        'Authorization': 'Bearer ' + spotifyToken.value
                     },
                     data: {
                         q: query,
@@ -206,8 +228,7 @@
                     },
                     error: function(error) {
                         // if the error is a 401 (unauthorized), the token probably has expired,
-                        // so request a new one. this request fails, but if the user tries again
-                        // it should succeed
+                        // so request a new one. 
                         if (error.status == 401) {
                             getAccessToken().then((token) => {
                                 spotifyToken = token;

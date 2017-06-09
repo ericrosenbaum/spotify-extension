@@ -177,7 +177,7 @@
                         var trackObjects = response['tracks']['items'];
 
                         // fail if there are no tracks
-                        if (!trackObjects) {
+                        if (!trackObjects || trackObjects.length === 0) {
                             resetTrackData();
                             reject();
                             return;

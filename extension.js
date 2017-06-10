@@ -547,11 +547,11 @@
         var descriptor = {
             blocks: [
               ['w', '♫'+num+' play music like %s', 'searchAndPlay', 'tacos'],
-              ['w', '♫'+num+' play music like %s and wait', 'searchAndPlayAndWait', 'lauryn hill'],
+              ['w', '♫'+num+' play music like %s until done', 'searchAndPlayAndWait', 'lauryn hill'],
               ['r', '♫'+num+' %m.trackData name', 'trackData', 'full'],
               [' ', '♫'+num+' play next beat', 'playNextBeat'],
               [' ', '♫'+num+' play beat %n', 'playBeat', 4],
-              ['w', '♫'+num+' play beat %n and wait', 'playBeatAndWait', 4],
+              ['w', '♫'+num+' play beat %n until done', 'playBeatAndWait', 4],
               ['r', '♫'+num+' current beat', 'currentBeat'],
               ['h', '♫'+num+' every beat', 'everyBeat'],
               ['h', '♫'+num+' every 4 beats', 'everyBar'],

@@ -4,7 +4,7 @@
         console.log('Tone library is already loaded');
         getTokenAndStart();
     } else {
-        $.getScript('https://rawgit.com/Tonejs/CDN/gh-pages/r8/Tone.min.js', getTokenAndStart);
+        $.getScript('Tone.min.js', getTokenAndStart);
     }
 
     function getTokenAndStart() {

@@ -4,7 +4,7 @@
         console.log('Tone library is already loaded');
         getTokenAndStart();
     } else {
-        $.getScript('https://raw.githubusercontent.com/ericrosenbaum/spotify-extension/gh-pages/Tone.min.js', getTokenAndStart);
+        $.getScript('https://ericrosenbaum.github.io/spotify-extension/Tone.min.js', getTokenAndStart);
     }
 
     function getTokenAndStart() {
